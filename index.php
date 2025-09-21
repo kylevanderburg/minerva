@@ -1,5 +1,6 @@
 <?php
-$contentRoot = __DIR__ . '/content/';
+require_once __DIR__ . '/minerva-config.php';
+$contentRoot = $minervaConfig['content_dir'];
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
@@ -192,10 +193,12 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
 <head>
     <meta charset="utf-8">
     <title>Vanderburg Minerva - <?php echo implode(" + ",$urlparts);?></title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/dda4946917.js" crossorigin="anonymous"></script>
     <link href="https://kylevanderburg.com/assets/kyle18.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="<?= $minervaConfig['favicon_url'] ?>">
     <style>
         body { background: #f8f9fa; }
         main { padding: 2rem; background: white; border-radius: 0.5rem; }
@@ -213,7 +216,8 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
 <body>
     <nav class="navbar navbar-secondary bg-secondary mb-3 d-print-none">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/" style="color:#fff;"><img src="/Minerva.svg" alt="" style="width:50px;filter: invert(100%);" /> Minerva Beta</a>
+            <a class="navbar-brand" href="/" style="color:#fff;"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+    <?= $minervaConfig['site_name']; ?></a>
         </div>
     </nav>
 

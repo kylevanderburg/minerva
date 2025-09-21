@@ -3,7 +3,8 @@ require_once 'auth.php';
 
 if (!isset($_SESSION['admin'])) die('Not authorized.');
 
-$contentRoot = realpath(__DIR__ . '/../content');
+require_once __DIR__ . '/../minerva-config.php';
+$contentRoot = $minervaConfig['content_dir'];
 
 function listMarkdownFiles($dir, $base = '') {
     $items = array_diff(scandir($dir), ['.', '..']);
@@ -12,6 +13,7 @@ function listMarkdownFiles($dir, $base = '') {
     $html = '';
 
     foreach ($items as $item) {
+        if ($item[0] === '.') continue;
         $fullPath = $dir . '/' . $item;
         $relative = ltrim($base . '/' . $item, '/');
 
@@ -42,7 +44,7 @@ function listMarkdownFiles($dir, $base = '') {
     <script src="https://kit.fontawesome.com/dda4946917.js" crossorigin="anonymous"></script>
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <link rel="icon" type="image/x-icon" href="<?= $minervaConfig['favicon_url'] ?>">
     <style>
         .content-box {
             max-width: 1000px;
@@ -51,9 +53,10 @@ function listMarkdownFiles($dir, $base = '') {
     </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-light bg-danger ">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#"><img src="/Minerva.svg" alt="" style="width:50px;filter: invert(100%);" /> Admin</a>
+        <a class="navbar-brand" href="#"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+    <?= $minervaConfig['site_name']; ?> Admin</a>
         <a class="btn btn-outline-light" href="logout.php">Logout</a>
     </div>
 </nav>
@@ -67,42 +70,6 @@ function listMarkdownFiles($dir, $base = '') {
     <ul class="list-group list-group-flush">
         <?= listMarkdownFiles($contentRoot); ?>
     </ul>
-
-    <h2>Manage Markdown Files</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Path</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        function listMarkdownFiles2($dir, $base = '') {
-            $items = array_diff(scandir($dir), ['.', '..']);
-            natsort($items);
-            foreach ($items as $item) {
-                $full = "$dir/$item";
-                $relative = ltrim("$base/$item", '/');
-                if (is_dir($full)) {
-                    listMarkdownFiles2($full, $relative);
-                } elseif (pathinfo($item, PATHINFO_EXTENSION) === 'md') {
-                    echo "<tr>";
-                    echo "<td><code>$relative</code></td>";
-                    echo "<td>
-                        <a class='btn btn-sm btn-outline-primary' href='edit.php?file=" . urlencode($relative) . "'>Edit</a>
-                        <a class='btn btn-sm btn-outline-warning' href='move.php?page=" . urlencode($relative) . "'>Move</a>
-                        <a class='btn btn-sm btn-outline-danger' href='delete.php?page=" . urlencode($relative) . "' onclick='return confirm(\"Are you sure?\")'>Delete</a>
-                    </td>";
-                    echo "</tr>";
-                }
-            }
-        }
-
-        listMarkdownFiles2(__DIR__ . '/../content');
-        ?>
-    </tbody>
-</table>
 
 </div>
 
