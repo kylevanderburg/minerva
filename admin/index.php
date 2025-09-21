@@ -18,8 +18,31 @@ function listMarkdownFiles($dir, $base = '') {
         $relative = ltrim($base . '/' . $item, '/');
 
         if (is_dir($fullPath)) {
-            $html .= "<li class='list-group-item'><strong>$item/</strong>";
-            $html .= "<ul class='list-group list-group-flush ms-3'>" . listMarkdownFiles($fullPath, $relative) . "</ul></li>";
+            $isTopLevel = strpos($relative, '/') === false;
+            $publicFile = $fullPath . '/.public';
+            $isPublic = file_exists($publicFile);
+
+            $html .= "<li class='list-group-item d-flex justify-content-between align-items-center'>";
+            $html .= "<div><strong>$item/</strong>";
+
+            if ($isTopLevel) {
+                $statusBadge = $isPublic
+                    ? "<span class='badge bg-success ms-2'>Public</span>"
+                    : "<span class='badge bg-secondary ms-2'>Private</span>";
+                $html .= $statusBadge;
+            }
+
+            $html .= "</div>";
+
+            if ($isTopLevel) {
+                $html .= "<div class='btn-group btn-group-sm' role='group'>";
+                $html .= "<a href='toggle_public.php?book=" . urlencode($item) . "' class='btn btn-outline-primary'>";
+                $html .= $isPublic ? "Make Private" : "Make Public";
+                $html .= "</a></div>";
+            }
+
+            $html .= "</li>";
+            $html .= "<ul class='list-group list-group-flush ms-3'>" . listMarkdownFiles($fullPath, $relative) . "</ul>";
         } elseif (pathinfo($item, PATHINFO_EXTENSION) === 'md') {
             $encoded = urlencode($relative);
             $html .= "<li class='list-group-item d-flex justify-content-between align-items-center'>";

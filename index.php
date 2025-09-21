@@ -71,17 +71,28 @@ function renderMarkdown($filePath) {
 
 // --- Dynamic homepage fallback ---
 function renderHomePage() {
-    ob_start();
-    ?>
-    <h1>Welcome to Minerva</h1>
-    <p>This is your dynamically generated homepage.</p>
-    <h2>Available Pages</h2>
-    <ul class="list-group list-group-flush">
-        <?php //listFiles(__DIR__ . '/content'); ?>
-    </ul>
-    <?php
-    return ob_get_clean();
+    $contentRoot = $GLOBALS['minervaConfig']['content_dir'];
+    $books = array_filter(scandir($contentRoot), function ($item) use ($contentRoot) {
+        return is_dir($contentRoot . '/' . $item)
+            && $item !== '.' && $item !== '..'
+            && file_exists($contentRoot . '/' . $item . '/' . $GLOBALS['minervaConfig']['public_indicator']);
+    });
+
+    natcasesort($books);
+
+    $html = "<h1>Welcome to {$GLOBALS['minervaConfig']['site_name']}</h1>";
+    $html .= "<div class='list-group'>";
+
+    foreach ($books as $book) {
+        $encoded = rawurlencode($book);
+        $html .= "<a class='list-group-item list-group-item-action' href='/$encoded/'><i class='fa-light fa-sharp-duotone fa-book'></i> $book</a>";
+    }
+
+    $html .= "</div>";
+
+    return $html;
 }
+
 
 // --- Navigation menu ---
 function listFiles($dir, $base = '') {
@@ -231,6 +242,7 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
                         listFiles("$contentRoot/$topLevelBook", $topLevelBook);
                     } else {
                         echo "<p class='text-muted'>Select a book to view its contents.</p>";
+
                     }
                     ?>
                 </ul>
