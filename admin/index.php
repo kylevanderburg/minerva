@@ -62,7 +62,7 @@ function listMarkdownFiles($dir, $base = '') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Minerva Admin Dashboard</title>
+    <title><?= $minervaConfig['site_name']; ?> Admin Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://kit.fontawesome.com/dda4946917.js" crossorigin="anonymous"></script>
     <!-- Bootstrap -->
