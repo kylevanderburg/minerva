@@ -203,7 +203,7 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Vanderburg Minerva - <?php echo implode(" + ",$urlparts);?></title>
+    <title><?= $minervaConfig['site_name']; ?> - <?php echo implode(" + ",$urlparts);?></title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -228,7 +228,7 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
     <nav class="navbar navbar-secondary bg-secondary mb-3 d-print-none">
         <div class="container-fluid">
             <a class="navbar-brand" href="/" style="color:#fff;"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
-    <?= $minervaConfig['site_name']; ?></a>
+            <?= $minervaConfig['site_name']; ?></a>
         </div>
     </nav>
 
