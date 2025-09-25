@@ -51,12 +51,9 @@ $content = file_get_contents($fullPath);
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/admin/">Minerva Admin</a>
-        <span class="navbar-text text-light">Editing: <?= htmlspecialchars($file) ?></span>
-    </div>
-</nav>
+<?php 
+require_once __DIR__ . '/../minerva-config.php';
+require "zz-nav.php"; ?>
 
 <div class="editor-container shadow">
     <h1 class="mb-4">Editing: <?= htmlspecialchars($file) ?></h1>

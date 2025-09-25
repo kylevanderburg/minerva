@@ -211,7 +211,7 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
     <link href="https://kylevanderburg.com/assets/kyle18.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="<?= $minervaConfig['favicon_url'] ?>">
     <style>
-        body { background: #f8f9fa; }
+        body { background: #fff; }
         main { padding: 2rem; background: white; border-radius: 0.5rem; }
         a { text-decoration: none; }
         a:hover { text-decoration: underline; }
@@ -225,9 +225,9 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-secondary bg-secondary mb-3 d-print-none">
+    <nav class="navbar navbar-light bg-light mb-3 d-print-none" style="border-bottom:1px solid #000;">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/" style="color:#fff;"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+            <a class="navbar-brand" href="/" style="color:#000;text-decoratoin:none;"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
             <?= $minervaConfig['site_name']; ?></a>
         </div>
     </nav>

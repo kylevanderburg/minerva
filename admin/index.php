@@ -1,62 +1,59 @@
 <?php
 require_once 'auth.php';
-
 if (!isset($_SESSION['admin'])) die('Not authorized.');
 
 require_once __DIR__ . '/../minerva-config.php';
 $contentRoot = $minervaConfig['content_dir'];
+$requestedPath = isset($_GET['book']) ? trim($_GET['book'], '/') : '';
+$currentPath = realpath($contentRoot . '/' . $requestedPath);
 
-function listMarkdownFiles($dir, $base = '') {
-    $items = array_diff(scandir($dir), ['.', '..']);
+// Security check: Ensure path is inside content root
+if (strpos($currentPath, realpath($contentRoot)) !== 0) {
+    die('Invalid path');
+}
+
+function breadcrumbs($path) {
+    $parts = explode('/', trim($path, '/'));
+    $crumbs = [];
+    $accum = '';
+
+    foreach ($parts as $part) {
+        $accum .= ($accum ? '/' : '') . $part;
+        $crumbs[] = "<a href='?book=" . urlencode($accum) . "'>" . htmlspecialchars($part) . "</a>";
+    }
+
+    return implode(' <span class="text-muted">›</span> ', $crumbs);
+}
+
+function listDirectory($dirPath, $baseRel = '') {
+    $items = array_diff(scandir($dirPath), ['.', '..']);
     natcasesort($items);
-
     $html = '';
 
     foreach ($items as $item) {
         if ($item[0] === '.') continue;
-        $fullPath = $dir . '/' . $item;
-        $relative = ltrim($base . '/' . $item, '/');
+
+        $fullPath = $dirPath . '/' . $item;
+        $relative = ltrim($baseRel . '/' . $item, '/');
 
         if (is_dir($fullPath)) {
-            $isTopLevel = strpos($relative, '/') === false;
-            $publicFile = $fullPath . '/.public';
-            $isPublic = file_exists($publicFile);
-
+            $encoded = urlencode($relative);
             $html .= "<li class='list-group-item d-flex justify-content-between align-items-center'>";
-            $html .= "<div><strong>$item/</strong>";
-
-            if ($isTopLevel) {
-                $statusBadge = $isPublic
-                    ? "<span class='badge bg-success ms-2'>Public</span>"
-                    : "<span class='badge bg-secondary ms-2'>Private</span>";
-                $html .= $statusBadge;
-            }
-
-            $html .= "</div>";
-
-            if ($isTopLevel) {
-                $html .= "<div class='btn-group btn-group-sm' role='group'>";
-                $html .= "<a href='toggle_public.php?book=" . urlencode($item) . "' class='btn btn-outline-primary'>";
-                $html .= $isPublic ? "Make Private" : "Make Public";
-                $html .= "</a></div>";
-            }
-
+            $html .= "<div><i class='fa-sharp-duotone fa-regular fa-folder me-2'></i> <a href='?book=$encoded'>" . htmlspecialchars($item) . "</a></div>";
             $html .= "</li>";
-            $html .= "<ul class='list-group list-group-flush ms-3'>" . listMarkdownFiles($fullPath, $relative) . "</ul>";
         } elseif (pathinfo($item, PATHINFO_EXTENSION) === 'md') {
             $encoded = urlencode($relative);
             $html .= "<li class='list-group-item d-flex justify-content-between align-items-center'>";
-            $html .= "<div><a href='edit.php?file=$encoded'>$relative</a></div>";
-            $html .= "<div class='btn-group btn-group-sm' role='group'>";
+            $html .= "<div><i class='fa-sharp-duotone fa-regular fa-file-lines me-2'></i> <a href='edit.php?file=$encoded'>" . htmlspecialchars($item) . "</a></div>";
+            $html .= "<div class='btn-group btn-group-sm'>";
             $html .= "<a href='move.php?page=$encoded' class='btn btn-outline-secondary'>Move</a>";
-            $html .= "<a href='delete.php?page=$encoded' class='btn btn-outline-danger' onclick='return confirm(\"Are you sure you want to delete $relative?\")'>Delete</a>";
+            $html .= "<a href='delete.php?page=$encoded' class='btn btn-outline-danger' onclick='return confirm(\"Are you sure you want to delete $item?\")'>Delete</a>";
             $html .= "</div></li>";
         }
     }
 
     return $html;
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -65,7 +62,6 @@ function listMarkdownFiles($dir, $base = '') {
     <title><?= $minervaConfig['site_name']; ?> Admin Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://kit.fontawesome.com/dda4946917.js" crossorigin="anonymous"></script>
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="<?= $minervaConfig['favicon_url'] ?>">
     <style>
@@ -76,24 +72,48 @@ function listMarkdownFiles($dir, $base = '') {
     </style>
 </head>
 <body>
-<nav class="navbar navbar-light bg-danger ">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
-    <?= $minervaConfig['site_name']; ?> Admin</a>
-        <a class="btn btn-outline-light" href="logout.php">Logout</a>
-    </div>
-</nav>
+<?php require "zz-nav.php"; ?>
 
 <div class="container content-box">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3"><i class="fa fa-books"></i> Page Manager</h1>
-        <a href="new.php" class="btn btn-success"><i class="fa fa-plus"></i> New Page</a>
+        <h1 class="h3"><i class="fa-sharp-duotone fa-regular fa-books"></i>
+            <?php if ($requestedPath): ?>
+                <a href="?book=" class="btn btn-link text-decoration-none">&laquo; Root</a>
+                <?= breadcrumbs($requestedPath) ?>
+            <?php else: ?>
+                Page Manager
+            <?php endif; ?>
+        </h1>
+        <a href="new.php" class="btn btn-success"><i class="fa-sharp-duotone fa-regular fa-plus"></i> New Page</a>
     </div>
 
-    <ul class="list-group list-group-flush">
-        <?= listMarkdownFiles($contentRoot); ?>
-    </ul>
+    <ul class="list-group">
+        <?php
+        // At root: show top-level book folders and public/private toggle
+        if (!$requestedPath):
+            $items = array_diff(scandir($contentRoot), ['.', '..']);
+            natcasesort($items);
+            foreach ($items as $item) {
+                if ($item[0] === '.') continue;
+                $fullPath = $contentRoot . '/' . $item;
+                if (!is_dir($fullPath)) continue;
 
+                $encoded = urlencode($item);
+                $isPublic = file_exists("$fullPath/.public");
+
+                echo "<li class='list-group-item d-flex justify-content-between align-items-center'>";
+                echo "<div><i class='fa-sharp-duotone fa-regular fa-folder me-2'></i> <a href='?book=$encoded'><strong>" . htmlspecialchars($item) . "</strong></a> ";
+                echo "<span class='badge bg-" . ($isPublic ? 'success' : 'secondary') . " ms-2'>" . ($isPublic ? 'Public' : 'Private') . "</span></div>";
+                echo "<div class='btn-group btn-group-sm'>";
+                echo "<a href='toggle_public.php?book=$encoded' class='btn btn-outline-primary'>";
+                echo $isPublic ? "Make Private" : "Make Public";
+                echo "</a></div></li>";
+            }
+        else:
+            echo listDirectory($currentPath, $requestedPath);
+        endif;
+        ?>
+    </ul>
 </div>
 
 </body>
