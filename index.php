@@ -114,12 +114,14 @@ function listFiles($dir, $base = '') {
 
         if (is_dir($fullPath)) {
             $label = basename($item);
+            $label = str_replace("-"," ",$label);
             echo "<li><span class='folder'><i class=\"fa-sharp-duotone fa-light fa-folder\"></i> <a href='$cleanUrl'>$label/</a></span>";
             listFiles($fullPath, $relativePath);
             echo "</li>";
         } elseif (pathinfo($item, PATHINFO_EXTENSION) === 'md') {
             if ($item === 'index.md') continue;
             $label = pathinfo($item, PATHINFO_FILENAME);
+            $label = str_replace("-"," ",$label);
             echo "<li><span class='file'><i class=\"fa-sharp-duotone fa-light fa-file\"></i> <a href='$cleanUrl'>$label</a></span></li>";
         }
     }
@@ -212,7 +214,7 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
     <link rel="icon" type="image/x-icon" href="<?= $minervaConfig['favicon_url'] ?>">
     <style>
         body { background: #fff; }
-        main { padding: 2rem; background: white; border-radius: 0.5rem; }
+        main { padding: 1rem; background: white; border-radius: 0.0rem; }
         a { text-decoration: none; }
         a:hover { text-decoration: underline; }
         .list-group-item a { color: #0d6efd; }
@@ -229,12 +231,15 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
         <div class="container-fluid">
             <a class="navbar-brand" href="/" style="color:#000;text-decoratoin:none;"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
             <?= $minervaConfig['site_name']; ?></a>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-            <aside class="col-md-3 d-print-none">
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#navigation" aria-controls="navigation" aria-label="Toggle navigation"> 
+                <span class="navbar-toggler-icon"></span> 
+            </button> 
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="navigation" aria-labelledby="navigationLabel"> 
+                <div class="offcanvas-header"> <h5 class="offcanvas-title" id="navigationLabel"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+            <?= $minervaConfig['site_name']; ?></a></h5> 
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div> 
+                <div class="offcanvas-body">
                 <h5 class="mb-3">Navigation</h5>
                 <ul class="list-group list-group-flush">
                     <?php
@@ -246,8 +251,27 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
                     }
                     ?>
                 </ul>
-            </aside>
-            <main class="col-md-9">
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <?php /*<aside class="col-md-3 d-print-none">
+                
+            <h5 class="mb-3">Navigation</h5>
+                <ul class="list-group list-group-flush">
+                    <?php
+                    if ($topLevelBook && is_dir("$contentRoot/$topLevelBook")) {
+                        listFiles("$contentRoot/$topLevelBook", $topLevelBook);
+                    } else {
+                        echo "<p class='text-muted'>Select a book to view its contents.</p>";
+
+                    }
+                    ?>
+                </ul>
+            </aside>*/ ?>
+            <main class="col-md-12">
                 <?= renderBreadcrumb($relativePath) ?>
                 <?= $renderedContent ?>
                 <?php if (isset($currentResolvedFile)) echo renderPrevNextButtons($relativePath, $currentResolvedFile); ?>
@@ -267,5 +291,6 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
             });
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
