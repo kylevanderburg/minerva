@@ -65,8 +65,10 @@ if (!$requestedFile && $renderDynamicHome) {
 // --- Markdown renderer ---
 function renderMarkdown($filePath) {
     global $parser;
+    $segments = $filePath === '' ? [] : explode('/', $filePath);
+    $last = str_replace(".md","",str_replace("-"," ",array_pop($segments)));
     $markdown = file_get_contents($filePath);
-    return $parser->text($markdown);
+    return "<h1>".$last."</h1>" . $parser->text($markdown);
 }
 
 // --- Dynamic homepage fallback ---
@@ -229,29 +231,12 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
 <body>
     <nav class="navbar navbar-light bg-light mb-3 d-print-none" style="border-bottom:1px solid #000;">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/" style="color:#000;text-decoratoin:none;"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
-            <?= $minervaConfig['site_name']; ?></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#navigation" aria-controls="navigation" aria-label="Toggle navigation"> 
+            <a class="navbar-brand" href="/" style="color:#000;text-decoratoin:none;"><h5 ><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+            <?= $minervaConfig['site_name']; ?></h5></a>
+            <button class="navbar-toggler d-inline d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#navigation" aria-controls="navigation" aria-label="Toggle navigation"> 
                 <span class="navbar-toggler-icon"></span> 
             </button> 
-            <div class="offcanvas offcanvas-start" tabindex="-1" id="navigation" aria-labelledby="navigationLabel"> 
-                <div class="offcanvas-header"> <h5 class="offcanvas-title" id="navigationLabel"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
-            <?= $minervaConfig['site_name']; ?></a></h5> 
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                </div> 
-                <div class="offcanvas-body">
-                <h5 class="mb-3">Navigation</h5>
-                <ul class="list-group list-group-flush">
-                    <?php
-                    if ($topLevelBook && is_dir("$contentRoot/$topLevelBook")) {
-                        listFiles("$contentRoot/$topLevelBook", $topLevelBook);
-                    } else {
-                        echo "<p class='text-muted'>Select a book to view its contents.</p>";
-
-                    }
-                    ?>
-                </ul>
-            </div>
+            
         </div>
     </nav>
 
@@ -271,7 +256,30 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
                     ?>
                 </ul>
             </aside>*/ ?>
-            <main class="col-md-12">
+            <div class="sidebar border-right col-md-3 col-lg-3 p-0" id="lz-leftmenu">
+                <div class="offcanvas-md offcanvas-start" tabindex="-1" id="navigation" aria-labelledby="navigationLabel"> 
+                    <div class="offcanvas-header"> <h5 class="offcanvas-title" id="navigationLabel"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+                        <?= $minervaConfig['site_name']; ?></a></h5> 
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div> 
+                    <div class="container">
+                        <h5 class="mb-3">Navigation</h5><br />
+                        <i class="fa-light fa-sharp-duotone fa-book"></i> <?php echo $topLevelBook;?>
+                        <ul class="list-group list-group-flush">
+                            <?php
+                            if ($topLevelBook && is_dir("$contentRoot/$topLevelBook")) {
+                                listFiles("$contentRoot/$topLevelBook", $topLevelBook);
+                            } else {
+                                echo "<p class='text-muted'>Select a book to view its contents.</p>";
+
+                            }
+                            ?>
+                        </ul>
+                    </div>
+            </div>
+            </div>
+
+            <main class="col-md-9">
                 <?= renderBreadcrumb($relativePath) ?>
                 <?= $renderedContent ?>
                 <?php if (isset($currentResolvedFile)) echo renderPrevNextButtons($relativePath, $currentResolvedFile); ?>
