@@ -84,12 +84,14 @@ function listDirectory($dirPath, $baseRel = '') {
                 Page Manager
             <?php endif; ?>
         </h1>
-        <a href="new.php" class="btn btn-success"><i class="fa-sharp-duotone fa-regular fa-plus"></i> New Page</a>
+        <div class="btn-group">
+            <a href="new.php" class="btn btn-success"><i class="fa-sharp-duotone fa-regular fa-plus"></i> New Page</a>
+            <a href="tools.php" class="btn btn-outline-secondary"><i class="fa fa-wrench"></i> Admin Tools</a>
+        </div>
     </div>
 
     <ul class="list-group">
         <?php
-        // At root: show top-level book folders and public/private toggle
         if (!$requestedPath):
             $items = array_diff(scandir($contentRoot), ['.', '..']);
             natcasesort($items);
