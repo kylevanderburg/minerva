@@ -7,6 +7,7 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $filename = trim($_POST['filename'] ?? '');
+    $filename = preg_replace('/\s+/', '-', $filename); // convert whitespace to dashes
     $sanitized = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $filename);
     $sanitized = trim($sanitized, '/');
 
@@ -51,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mb-3">
             <label for="filename" class="form-label">Page Path (no extension)</label>
             <input type="text" name="filename" id="filename" class="form-control"
-                   placeholder="e.g. book-1/chapter-4" required>
+                   placeholder="e.g. book-1/chapter-4" required
+                   oninput="this.value = this.value.replace(/\s+/g, '-');">
             <div class="form-text">Allowed: letters, numbers, hyphens, slashes (for folders)</div>
         </div>
         <button type="submit" class="btn btn-primary">Create Page</button>
