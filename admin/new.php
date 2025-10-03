@@ -2,28 +2,55 @@
 session_start();
 if (!isset($_SESSION['admin'])) die('Not authorized.');
 
+/**
+ * Normalize a requested filename into safe path segments under content/.
+ */
+function normalize_path(string $input): string
+{
+    $input = preg_replace('/\s+/', '-', trim($input));
+    $segments = explode('/', $input);
+
+    $normalized = [];
+    foreach ($segments as $segment) {
+        $clean = preg_replace('/[^a-zA-Z0-9_\-]/', '', $segment);
+        $clean = trim($clean, '-_');
+        if ($clean !== '') {
+            $normalized[] = $clean;
+        }
+    }
+
+    return implode('/', $normalized);
+}
+
 $error = '';
-$success = '';
+$submittedValue = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $filename = trim($_POST['filename'] ?? '');
-    $filename = preg_replace('/\s+/', '-', $filename); // convert whitespace to dashes
-    $sanitized = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $filename);
-    $sanitized = trim($sanitized, '/');
+$contentRoot = realpath(__DIR__ . '/../content');
+if ($contentRoot === false) {
+    $error = 'Content directory is missing.';
+}
 
-    if (!$sanitized) {
-        $error = "Invalid filename.";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$error) {
+    $submittedValue = trim($_POST['filename'] ?? '');
+    $sanitized = normalize_path($submittedValue);
+
+    if ($sanitized === '') {
+        $error = 'Invalid filename.';
     } else {
-        $fullPath = realpath(__DIR__ . '/../content') . '/' . $sanitized . '.md';
+        $fullPath = $contentRoot . '/' . $sanitized . '.md';
 
         if (file_exists($fullPath)) {
-            $error = "That page already exists.";
+            $error = 'That page already exists.';
         } else {
             $dir = dirname($fullPath);
-            if (!is_dir($dir)) mkdir($dir, 0755, true);
-            file_put_contents($fullPath, "# New Page\n\nStart writing your content here.");
-            header("Location: edit.php?file=" . urlencode($sanitized . '.md'));
-            exit;
+            if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+                $error = 'Unable to create folders for that path.';
+            } elseif (file_put_contents($fullPath, "# New Page\n\nStart writing your content here.") === false) {
+                $error = 'Unable to create the new page file.';
+            } else {
+                header('Location: edit.php?file=' . urlencode($sanitized . '.md'));
+                exit;
+            }
         }
     }
 }
@@ -53,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="filename" class="form-label">Page Path (no extension)</label>
             <input type="text" name="filename" id="filename" class="form-control"
                    placeholder="e.g. book-1/chapter-4" required
+                   value="<?= htmlspecialchars($submittedValue) ?>"
                    oninput="this.value = this.value.replace(/\s+/g, '-');">
             <div class="form-text">Allowed: letters, numbers, hyphens, slashes (for folders)</div>
         </div>

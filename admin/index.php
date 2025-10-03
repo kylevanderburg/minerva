@@ -3,17 +3,48 @@ require_once 'auth.php';
 if (!isset($_SESSION['admin'])) die('Not authorized.');
 
 require_once __DIR__ . '/../minerva-config.php';
-$contentRoot = $minervaConfig['content_dir'];
-$requestedPath = isset($_GET['book']) ? trim($_GET['book'], '/') : '';
-$currentPath = realpath($contentRoot . '/' . $requestedPath);
 
-// Security check: Ensure path is inside content root
-if (strpos($currentPath, realpath($contentRoot)) !== 0) {
-    die('Invalid path');
+function sanitize_relative_path(string $input): string
+{
+    $segments = preg_split('~/+~', trim($input, '/'));
+    $cleaned = [];
+
+    foreach ($segments as $segment) {
+        $segment = preg_replace('/[^a-zA-Z0-9_\-]/', '', $segment);
+        if ($segment !== '') {
+            $cleaned[] = $segment;
+        }
+    }
+
+    return implode('/', $cleaned);
+}
+
+$contentRootConfig = $minervaConfig['content_dir'];
+$contentRoot = realpath($contentRootConfig);
+
+if ($contentRoot === false) {
+    die('Content directory is missing.');
+}
+
+$requestedPath = isset($_GET['book']) ? sanitize_relative_path($_GET['book']) : '';
+$currentPath = $contentRoot;
+$directoryError = '';
+
+if ($requestedPath !== '') {
+    $targetPath = $contentRoot . '/' . $requestedPath;
+    $resolvedPath = realpath($targetPath);
+
+    $prefix = $contentRoot . DIRECTORY_SEPARATOR;
+    if ($resolvedPath === false || strncmp($resolvedPath, $prefix, strlen($prefix)) !== 0) {
+        $directoryError = 'The requested folder could not be found.';
+        $requestedPath = '';
+    } else {
+        $currentPath = $resolvedPath;
+    }
 }
 
 function breadcrumbs($path) {
-    $parts = explode('/', trim($path, '/'));
+    $parts = array_values(array_filter(explode('/', trim($path, '/')), 'strlen'));
     $crumbs = [];
     $accum = '';
 
@@ -26,7 +57,20 @@ function breadcrumbs($path) {
 }
 
 function listDirectory($dirPath, $baseRel = '') {
-    $items = array_diff(scandir($dirPath), ['.', '..']);
+    if (!is_dir($dirPath)) {
+        return "<li class='list-group-item text-muted'>Folder not found.</li>";
+    }
+
+    $items = scandir($dirPath);
+    if ($items === false) {
+        return "<li class='list-group-item text-muted'>Unable to read folder.</li>";
+    }
+
+    $items = array_diff($items, ['.', '..']);
+    if (empty($items)) {
+        return "<li class='list-group-item text-muted'>No content yet.</li>";
+    }
+
     natcasesort($items);
     $html = '';
 
@@ -90,26 +134,42 @@ function listDirectory($dirPath, $baseRel = '') {
         </div>
     </div>
 
+    <?php if ($directoryError): ?>
+        <div class="alert alert-warning"><?= htmlspecialchars($directoryError) ?></div>
+    <?php endif; ?>
+
     <ul class="list-group">
         <?php
         if (!$requestedPath):
-            $items = array_diff(scandir($contentRoot), ['.', '..']);
-            natcasesort($items);
-            foreach ($items as $item) {
-                if ($item[0] === '.') continue;
-                $fullPath = $contentRoot . '/' . $item;
-                if (!is_dir($fullPath)) continue;
+            $items = scandir($contentRoot);
+            if ($items === false) {
+                echo "<li class='list-group-item text-muted'>Unable to read the content directory.</li>";
+            } else {
+                $items = array_diff($items, ['.', '..']);
+                natcasesort($items);
+                $rendered = false;
 
-                $encoded = urlencode($item);
-                $isPublic = file_exists("$fullPath/.public");
+                foreach ($items as $item) {
+                    if ($item[0] === '.') continue;
+                    $fullPath = $contentRoot . '/' . $item;
+                    if (!is_dir($fullPath)) continue;
 
-                echo "<li class='list-group-item d-flex justify-content-between align-items-center'>";
-                echo "<div><i class='fa-sharp-duotone fa-regular fa-folder me-2'></i> <a href='?book=$encoded'><strong>" . htmlspecialchars($item) . "</strong></a> ";
-                echo "<span class='badge bg-" . ($isPublic ? 'success' : 'secondary') . " ms-2'>" . ($isPublic ? 'Public' : 'Private') . "</span></div>";
-                echo "<div class='btn-group btn-group-sm'>";
-                echo "<a href='toggle_public.php?book=$encoded' class='btn btn-outline-primary'>";
-                echo $isPublic ? "Make Private" : "Make Public";
-                echo "</a></div></li>";
+                    $encoded = urlencode($item);
+                    $isPublic = file_exists("$fullPath/.public");
+
+                    echo "<li class='list-group-item d-flex justify-content-between align-items-center'>";
+                    echo "<div><i class='fa-sharp-duotone fa-regular fa-folder me-2'></i> <a href='?book=$encoded'><strong>" . htmlspecialchars($item) . "</strong></a> ";
+                    echo "<span class='badge bg-" . ($isPublic ? 'success' : 'secondary') . " ms-2'>" . ($isPublic ? 'Public' : 'Private') . "</span></div>";
+                    echo "<div class='btn-group btn-group-sm'>";
+                    echo "<a href='toggle_public.php?book=$encoded' class='btn btn-outline-primary'>";
+                    echo $isPublic ? "Make Private" : "Make Public";
+                    echo "</a></div></li>";
+                    $rendered = true;
+                }
+
+                if (!$rendered) {
+                    echo "<li class='list-group-item text-muted'>No books have been created yet.</li>";
+                }
             }
         else:
             echo listDirectory($currentPath, $requestedPath);

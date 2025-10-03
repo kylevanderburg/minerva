@@ -6,13 +6,13 @@
         </a>
         <div class="btn-group" role="group">
             <a class="btn btn-outline-light" href="new.php">
-                <i class="fa fa-plus"></i> New Page
+                <i class="fa-sharp-duotone fa-regular fa-plus"></i> New Page
             </a>
             <a class="btn btn-outline-light" href="tools.php">
-                <i class="fa fa-tools"></i> Tools
+                <i class="fa-sharp-duotone fa-regular fa-tools"></i> Tools
             </a>
             <a class="btn btn-outline-light" href="logout.php">
-                <i class="fa fa-sign-out-alt"></i> Logout
+                <i class="fa-sharp-duotone fa-regular fa-sign-out-alt"></i> Logout
             </a>
         </div>
     </div>
