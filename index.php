@@ -233,10 +233,9 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
         <div class="container-fluid">
             <a class="navbar-brand" href="/" style="color:#000;text-decoratoin:none;"><h5 ><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
             <?= $minervaConfig['site_name']; ?></h5></a>
-            <button class="navbar-toggler d-inline d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#navigation" aria-controls="navigation" aria-label="Toggle navigation"> 
+            <button class="navbar-toggler d-inline d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#leftmenu" aria-controls="navigation" aria-label="Toggle navigation"> 
                 <span class="navbar-toggler-icon"></span> 
             </button> 
-            
         </div>
     </nav>
 
@@ -256,28 +255,33 @@ function renderPrevNextButtons($relativePath, $requestedFile) {
                     ?>
                 </ul>
             </aside>*/ ?>
-            <div class="sidebar border-right col-md-3 col-lg-3 p-0" id="lz-leftmenu">
-                <div class="offcanvas-md offcanvas-start" tabindex="-1" id="navigation" aria-labelledby="navigationLabel"> 
-                    <div class="offcanvas-header"> <h5 class="offcanvas-title" id="navigationLabel"><img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
-                        <?= $minervaConfig['site_name']; ?></a></h5> 
-                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <div class="sidebar border-end col-md-3 col-lg-3 p-0" id="lz-leftmenu">
+                <div class="offcanvas-md offcanvas-start" tabindex="-1" id="leftmenu" aria-labelledby="navigationLabel"> 
+                    <div class="offcanvas-header border-bottom">
+                        <h5 class="offcanvas-title d-flex align-items-center" id="navigationLabel">
+                            <img src="<?= $minervaConfig['logo_url']; ?>" alt="Logo" height="24" class="me-2">
+                            <?= $minervaConfig['site_name']; ?>
+                        </h5>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" data-bs-target="#leftmenu" aria-label="Close"></button>
                     </div> 
-                    <div class="container">
-                        <h5 class="mb-3">Navigation</h5><br />
-                        <i class="fa-light fa-sharp-duotone fa-book"></i> <?php echo $topLevelBook;?>
+
+                    <!-- Scrollable container -->
+                    <div class="container overflow-y-auto" style="max-height: calc(100vh - 56px);">
+                        <h5 class="my-3">Navigation</h5>
+                        <p><i class="fa-sharp-duotone fa-book me-2"></i> <?= $topLevelBook; ?></p>
                         <ul class="list-group list-group-flush">
                             <?php
                             if ($topLevelBook && is_dir("$contentRoot/$topLevelBook")) {
                                 listFiles("$contentRoot/$topLevelBook", $topLevelBook);
                             } else {
                                 echo "<p class='text-muted'>Select a book to view its contents.</p>";
-
                             }
                             ?>
                         </ul>
                     </div>
+                </div>
             </div>
-            </div>
+
 
             <main class="col-md-9">
                 <?= renderBreadcrumb($relativePath) ?>

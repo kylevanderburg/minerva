@@ -75,15 +75,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$error) {
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
+    <?php
+        function getAllSubdirs($baseDir, $relativePath = '') {
+            $dirs = [];
+            $fullPath = rtrim($baseDir . '/' . $relativePath, '/');
+
+            foreach (scandir($fullPath) as $entry) {
+                // Skip hidden files/folders
+                if ($entry[0] === '.') continue;
+
+                $subPath = $relativePath ? "$relativePath/$entry" : $entry;
+                $absPath = "$baseDir/$subPath";
+
+                if (is_dir($absPath)) {
+                    $dirs[] = $subPath;
+                    $dirs = array_merge($dirs, getAllSubdirs($baseDir, $subPath));
+                }
+            }
+
+            return $dirs;
+        }
+
+
+        $books = getAllSubdirs($contentRoot);
+        ?>
+
     <form method="post">
         <div class="mb-3">
             <label for="filename" class="form-label">Page Path (no extension)</label>
             <input type="text" name="filename" id="filename" class="form-control"
-                   placeholder="e.g. book-1/chapter-4" required
-                   value="<?= htmlspecialchars($submittedValue) ?>"
-                   oninput="this.value = this.value.replace(/\s+/g, '-');">
-            <div class="form-text">Allowed: letters, numbers, hyphens, slashes (for folders)</div>
+                list="book-paths" placeholder="e.g. book-1/chapter-4" required
+                value="<?= htmlspecialchars($submittedValue) ?>"
+                oninput="this.value = this.value.replace(/\s+/g, '-');">
+            <datalist id="book-paths">
+                <?php foreach ($books as $book): ?>
+                    <option value="<?= htmlspecialchars($book) ?>/">
+                <?php endforeach; ?>
+            </datalist>
+            <div class="form-text">Start typing a book name or choose from the list. Use slashes to create subfolders.</div>
         </div>
+
         <button type="submit" class="btn btn-primary">Create Page</button>
         <a href="index.php" class="btn btn-secondary">Cancel</a>
     </form>
